@@ -114,28 +114,60 @@ New-ADUser
 
   # Script “todo en uno” para onboarding#
 
-    $Nombre = "Maria"
-  $Apellido = "Gonzalez"
-  $Usuario = "mgonzalez"
-  $Dominio = "empresa.local"
-  $OU = "OU=Usuarios,DC=empresa,DC=local"
-  $Password = ConvertTo-SecureString "Bienvenido#2026!" -AsPlainText -Force
-  
-  New-ADUser `
-      -Name "$Nombre $Apellido" `
-      -GivenName $Nombre `
-      -Surname $Apellido `
-      -SamAccountName $Usuario `
-      -UserPrincipalName "$Usuario@$Dominio" `
-      -Path $OU `
-      -AccountPassword $Password `
-      -Enabled $true `
-      -ChangePasswordAtLogon $true
-  
-  Add-ADGroupMember -Identity "Usuarios-Office" -Members $Usuario
-  Add-ADGroupMember -Identity "Ventas" -Members $Usuario
-  
-  Write-Output "Usuario $Usuario creado correctamente"
+  # --- Datos del empleado ---
+$Nombre = "Laura"
+$Apellido = "Martinez"
+$Usuario = "lmartinez"
+$Dominio = "empresa.local"
+
+# --- OU destino ---
+$OU = "OU=Ventas,OU=Usuarios,DC=empresa,DC=local"
+
+# --- Grupos a asignar ---
+$Grupos = @(
+    "Ventas",
+    "Acceso-CRM",
+    "Usuarios-Office"
+)
+
+# --- Contraseña inicial ---
+$Password = ConvertTo-SecureString "Bienvenido#2026!" -AsPlainText -Force
+
+Write-Output "Iniciando onboarding para $Nombre $Apellido ($Usuario)"
+
+# --- Verificación previa ---
+if (Get-ADUser -Filter "SamAccountName -eq '$Usuario'") {
+
+    Write-Output "❌ El usuario $Usuario ya existe en Active Directory"
+    Write-Output "Proceso cancelado para evitar duplicados"
+
+} else {
+
+    Write-Output "Usuario no encontrado. Creando cuenta..."
+
+    # --- Creación del usuario ---
+    New-ADUser `
+        -Name "$Nombre $Apellido" `
+        -GivenName $Nombre `
+        -Surname $Apellido `
+        -SamAccountName $Usuario `
+        -UserPrincipalName "$Usuario@$Dominio" `
+        -Path $OU `
+        -AccountPassword $Password `
+        -Enabled $true `
+        -ChangePasswordAtLogon $true `
+        -Description "Usuario creado por onboarding automático"
+
+    Write-Output "Usuario $Usuario creado correctamente"
+
+    # --- Asignación de grupos ---
+    foreach ($Grupo in $Grupos) {
+        Add-ADGroupMember -Identity $Grupo -Members $Usuario
+        Write-Output "Grupo asignado: $Grupo"
+    }
+
+    Write-Output "✅ Onboarding finalizado correctamente para $Usuario"
+}
     
     
 
