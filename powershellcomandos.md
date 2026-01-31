@@ -31,6 +31,26 @@ Get-printer
 Get-printer -Name "name"|fl
 Get-printerDriver -Name "name"|fl
 
+# Verificación rápida de usuario#
+
+Get-ADUser jperez -Properties LockedOut, Enabled, LastLogonDate
+
+# Ver si un usuario está bloqueado#
+
+Search-ADAccount -LockedOut | Select Name
+
+# grupos de un usuario# 
+
+Get-ADPrincipalGroupMembership jperez | Select Name
+
+# Copiar permisos de un usuario a otro#
+
+Get-ADPrincipalGroupMembership jperez |
+Where-Object { $_.Name -ne "Domain Users" } |
+ForEach-Object {
+    Add-ADGroupMember -Identity $_.Name -Members mgonzalez
+}
+
 
 ## AUTOMATIZACIONES ##
 # Crear usuario AD + contraseña inicial# 
